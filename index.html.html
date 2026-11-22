@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>分類作業</title>
+  <style>
+    :root {
+      --bg-color: #f4f6f9;
+      --card-bg: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --concept-color: #0f766e;
+      --attr-color: #7c3aed;
+      --error-color: #dc2626;
+      --border-color: #cbd5e1;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 820px;
+      min-height: 100vh;
+      background: var(--card-bg);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 20px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    }
+
+    @media (min-width: 768px) {
+      .container {
+        min-height: 640px;
+        border-radius: 16px;
+        margin: 24px;
+        padding: 32px;
+      }
+    }
+
+    .screen {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      text-align: center;
+      margin: 0 0 16px 0;
+      color: var(--text-main);
+    }
+
+    .intro-box {
+      max-width: 480px;
+      width: 100%;
+      margin: auto;
+    }
+
+    .desc {
+      font-size: 1rem;
+      line-height: 1.6;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 1rem;
+      border: 1.5px solid var(--border-color);
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--primary);
+    }
+
+    .radio-group {
+      display: flex;
+      gap: 12px;
+    }
+
+    .radio-option {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px;
+      border: 1.5px solid var(--border-color);
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .radio-option:has(input:checked) {
+      border-color: var(--primary);
+      background-color: #eff6ff;
+      color: var(--primary);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px 20px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #ffffff;
+      background-color: var(--primary);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .btn:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .btn-secondary {
+      background-color: #0f766e;
+      margin-top: 16px;
+    }
+
+    .btn-secondary:hover {
+      background-color: #115e59;
+    }
+
+    .error-msg {
+      color: var(--error-color);
+      font-size: 0.9rem;
+      margin-top: 6px;
+      min-height: 20px;
+      text-align: center;
+    }
+
+    /* 測驗與指導語頂部標籤 */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .side-header {
+      flex: 1;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+    }
+
+    .side-header.left {
+      text-align: left;
+    }
+
+    .side-header.right {
+      text-align: right;
+    }
+
+    .key-hint {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+
+    .cat-label {
+      font-size: 1.2rem;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    .cat-concept {
+      color: var(--concept-color);
+    }
+
+    .cat-attr {
+      color: var(--attr-color);
+    }
+
+    .cat-or {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      margin: 2px 0;
+    }
+
+    .block-indicator {
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+
+    /* 指導語畫面 */
+    .instruction-body {
+      margin: auto;
+      max-width: 560px;
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    .instruction-body h2 {
+      font-size: 1.35rem;
+      margin-bottom: 12px;
+    }
+
+    .instruction-body p {
+      font-size: 1rem;
+      line-height: 1.7;
+      color: #334155;
+      margin-bottom: 16px;
+    }
+
+    .word-preview-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      text-align: left;
+      background: #f8fafc;
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+      margin-bottom: 24px;
+      font-size: 0.9rem;
+    }
+
+    .word-preview-item strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    /* 測驗中央刺激區 */
+    .stimulus-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 220px;
+      position: relative;
+      user-select: none;
+    }
+
+    .stimulus-word {
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+      padding: 16px 24px;
+      text-align: center;
+    }
+
+    .feedback-wrong {
+      margin-top: 12px;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--error-color);
+      visibility: hidden;
+    }
+
+    .feedback-wrong.visible {
+      visibility: visible;
+    }
+
+    /* 底部大按鈕（手機與滑鼠點擊用） */
+    .response-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .resp-btn {
+      padding: 22px 12px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      background: #f8fafc;
+      color: var(--text-main);
+      cursor: pointer;
+      touch-action: manipulation;
+      user-select: none;
+      transition: transform 0.05s, background-color 0.15s;
+    }
+
+    .resp-btn:active {
+      background: #e2e8f0;
+      transform: scale(0.98);
+    }
+
+    /* 結束畫面 */
+    .end-box {
+      margin: auto;
+      max-width: 460px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .status-text {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-top: 12px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- 1. 開始設定畫面 -->
+  <div id="screen-start" class="screen active">
+    <div class="intro-box">
+      <h1 id="app-title">分類作業</h1>
+      <p class="desc">
+        歡迎參與本次詞彙分類測驗。請在測驗過程中依照畫面左右兩側的類別提示，盡快且正確地將中央出現的詞彙進行分類。
+      </p>
+
+      <div class="form-group">
+        <label for="participant-id">受測者代碼</label>
+        <input type="text" id="participant-id" placeholder="請輸入研究人員提供之代碼" autocomplete="off" />
+      </div>
+
+      <div class="form-group">
+        <label>作答次數</label>
+        <div class="radio-group">
+          <label class="radio-option">
+            <input type="radio" name="session-num" value="1" checked />
+            第 1 次作答
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="session-num" value="2" />
+            第 2 次作答
+          </label>
+        </div>
+      </div>
+
+      <button type="button" id="btn-start" class="btn">開始測驗</button>
+      <div id="start-error" class="error-msg"></div>
+    </div>
+  </div>
+
+  <!-- 2. 區段指導語畫面 -->
+  <div id="screen-instruction" class="screen">
+    <div class="top-bar">
+      <div class="side-header left" id="inst-left-header"></div>
+      <div class="side-header right" id="inst-right-header"></div>
+    </div>
+    <div class="block-indicator" id="inst-block-progress"></div>
+
+    <div class="instruction-body">
+      <h2 id="inst-title">區段說明</h2>
+      <p id="inst-desc"></p>
+      <div class="word-preview-grid" id="inst-word-preview"></div>
+      <button type="button" id="btn-begin-block" class="btn">開始本區段（或按空白鍵）</button>
+    </div>
+  </div>
+
+  <!-- 3. 測驗進行畫面 -->
+  <div id="screen-trial" class="screen">
+    <div>
+      <div class="top-bar">
+        <div class="side-header left" id="trial-left-header"></div>
+        <div class="side-header right" id="trial-right-header"></div>
+      </div>
+      <div class="block-indicator" id="trial-progress"></div>
+    </div>
+
+    <div class="stimulus-area">
+      <div id="stimulus-word" class="stimulus-word"></div>
+      <div id="feedback-wrong" class="feedback-wrong">✕ 按錯了，請改按正確的一邊</div>
+    </div>
+
+    <div class="response-buttons">
+      <button type="button" id="btn-left" class="resp-btn">左側（E 鍵）</button>
+      <button type="button" id="btn-right" class="resp-btn">右側（I 鍵）</button>
+    </div>
+  </div>
+
+  <!-- 4. 結束畫面（不顯示任何分數或反應時間） -->
+  <div id="screen-end" class="screen">
+    <div class="end-box">
+      <h1>作答完成</h1>
+      <p class="desc">感謝您的耐心與協助！您的作答程序已全部結束。</p>
+      <div id="upload-status" class="status-text"></div>
+      <button type="button" id="btn-download-csv" class="btn btn-secondary" style="display: none;">
+        下載 CSV 原始資料
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // =========================================================================
+  // CONFIG 設定區
+  // =========================================================================
+  const CONFIG = {
+    title: "分類作業",
+    c1: {
+      name: "國外美食",
+      words: ["東京拉麵", "首爾烤肉", "大阪燒", "韓國炸雞", "日本壽司", "居酒屋"]
+    },
+    c2: {
+      name: "台灣美食",
+      words: ["台北牛肉麵", "台式熱炒", "小火鍋", "夜市牛排", "魯肉飯", "手搖飲"]
+    },
+    pos: {
+      name: "便宜划算",
+      words: ["便宜", "划算", "超值", "實惠", "親民", "物美價廉"]
+    },
+    neg: {
+      name: "昂貴不值",
+      words: ["昂貴", "太貴", "坑人", "暴利", "不值", "荷包失血"]
+    },
+    endpoint: "https://script.google.com/macros/s/AKfycbx-rbXVCpVL-2MLWagVahZvZGf0aOR5nWdEwwqz1J4GlcA74YahR0hFWSXIeW8ePEvE/exec"
+  };
+
+  // =========================================================================
+  // 測驗狀態與全域變數
+  // =========================================================================
+  const BLOCK_TRIAL_COUNTS = [20, 20, 20, 40, 20, 20, 40];
+
+  const state = {
+    id: "",
+    session: 1,
+    order: 1, // 1 = 先配對A再配對B；2 = 先配對B再配對A
+    blocks: [],
+    currentBlockIndex: 0,
+    currentTrialsList: [],
+    currentTrialIndex: 0,
+    trialStartTime: 0,
+    firstAttemptCorrect: 1,
+    isAwaitingResponse: false,
+    rawRecords: [],
+    finalPayload: null
+  };
+
+  // DOM 元素快取
+  const screens = {
+    start: document.getElementById("screen-start"),
+    instruction: document.getElementById("screen-instruction"),
+    trial: document.getElementById("screen-trial"),
+    end: document.getElementById("screen-end")
+  };
+
+  document.getElementById("app-title").textContent = CONFIG.title;
+  document.title = CONFIG.title;
+
+  function showScreen(name) {
+    Object.values(screens).forEach(el => el.classList.remove("active"));
+    screens[name].classList.add("active");
+  }
+
+  // =========================================================================
+  // 建立七個區段配置（依據隨機 order = 1 或 2）
+  // 配對 A：c1 與 pos 同側；配對 B：c1 與 neg 同側
+  // =========================================================================
+  function buildBlocks(order) {
+    // order === 1: 前半段為配對 A (c1+pos 左, c2+neg 右)，區段 5 互換為配對 B (c2+pos 左, c1+neg 右)
+    // order === 2: 前半段為配對 B (c2+pos 左, c1+neg 右)，區段 5 互換為配對 A (c1+pos 左, c2+neg 右)
+    const firstConceptLeft = order === 1 ? "c1" : "c2";
+    const firstConceptRight = order === 1 ? "c2" : "c1";
+    const firstPairing = order === 1 ? "A" : "B";
+
+    const secondConceptLeft = order === 1 ? "c2" : "c1";
+    const secondConceptRight = order === 1 ? "c1" : "c2";
+    const secondPairing = order === 1 ? "B" : "A";
+
+    return [
+      {
+        block: 1,
+        nTrials: BLOCK_TRIAL_COUNTS[0],
+        phase: "single",
+        pairing: firstPairing,
+        leftCategories: [firstConceptLeft],
+        rightCategories: [firstConceptRight],
+        desc: "請將畫面中央出現的詞彙，依照上方左右兩側的類別進行分類。按錯時會出現紅色叉號，請改按正確的一邊繼續。"
+      },
+      {
+        block: 2,
+        nTrials: BLOCK_TRIAL_COUNTS[1],
+        phase: "single",
+        pairing: firstPairing,
+        leftCategories: ["pos"],
+        rightCategories: ["neg"],
+        desc: "接下來請分類另一組詞彙，請注意上方左右兩側的類別名稱已經更新。"
+      },
+      {
+        block: 3,
+        nTrials: BLOCK_TRIAL_COUNTS[2],
+        phase: "practice",
+        pairing: firstPairing,
+        leftCategories: [firstConceptLeft, "pos"],
+        rightCategories: [firstConceptRight, "neg"],
+        desc: "本區段為合併分類練習。左右兩側各有兩個類別，請依照對應位置盡快且正確地按鍵分類。"
+      },
+      {
+        block: 4,
+        nTrials: BLOCK_TRIAL_COUNTS[3],
+        phase: "test",
+        pairing: firstPairing,
+        leftCategories: [firstConceptLeft, "pos"],
+        rightCategories: [firstConceptRight, "neg"],
+        desc: "本區段為合併分類正式測驗，規則與上一區段完全相同，請保持專注並盡快作答。"
+      },
+      {
+        block: 5,
+        nTrials: BLOCK_TRIAL_COUNTS[4],
+        phase: "single",
+        pairing: secondPairing,
+        leftCategories: [secondConceptLeft],
+        rightCategories: [secondConceptRight],
+        desc: "請注意！左右兩側的類別位置已經互換。請先熟悉新的左右位置配置。"
+      },
+      {
+        block: 6,
+        nTrials: BLOCK_TRIAL_COUNTS[5],
+        phase: "practice",
+        pairing: secondPairing,
+        leftCategories: [secondConceptLeft, "pos"],
+        rightCategories: [secondConceptRight, "neg"],
+        desc: "本區段為互換位置後的合併分類練習。請確認上方左右兩側的新組合後再開始。"
+      },
+      {
+        block: 7,
+        nTrials: BLOCK_TRIAL_COUNTS[6],
+        phase: "test",
+        pairing: secondPairing,
+        leftCategories: [secondConceptLeft, "pos"],
+        rightCategories: [secondConceptRight, "neg"],
+        desc: "本區段為最後的正式測驗，規則與上一區段完全相同，請盡快且正確地完成。"
+      }
+    ];
+  }
+
+  // =========================================================================
+  // 刺激序列生成（平衡各類別次數並避免連續重複同一個字詞）
+  // =========================================================================
+  function shuffleArray(arr) {
+    const copy = arr.slice();
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  }
+
+  function generateTrialsForBlock(blockCfg) {
+    const allCats = [...blockCfg.leftCategories, ...blockCfg.rightCategories];
+    const items = [];
+
+    // 依類別輪流抽取詞彙池，確保各類別出現比例均衡
+    const pools = {};
+    allCats.forEach(cat => {
+      pools[cat] = shuffleArray(CONFIG[cat].words);
+    });
+
+    for (let i = 0; i < blockCfg.nTrials; i++) {
+      const cat = allCats[i % allCats.length];
+      if (pools[cat].length === 0) {
+        pools[cat] = shuffleArray(CONFIG[cat].words);
+      }
+      const word = pools[cat].pop();
+      const correctSide = blockCfg.leftCategories.includes(cat) ? "left" : "right";
+      items.push({
+        category: cat,
+        stimulus: word,
+        correctSide: correctSide
+      });
+    }
+
+    // 洗牌並避免相鄰兩題出現完全相同的刺激詞
+    let shuffled = shuffleArray(items);
+    for (let attempt = 0; attempt < 20; attempt++) {
+      let hasAdjacentDuplicate = false;
+      for (let i = 1; i < shuffled.length; i++) {
+        if (shuffled[i].stimulus === shuffled[i - 1].stimulus) {
+          hasAdjacentDuplicate = true;
+          break;
+        }
+      }
+      if (!hasAdjacentDuplicate) break;
+      shuffled = shuffleArray(items);
+    }
+
+    return shuffled;
+  }
+
+  // =========================================================================
+  // 渲染左右類別標題 HTML
+  // =========================================================================
+  function renderSideHeaderHTML(categories, sideLabel) {
+    const itemsHtml = categories.map(cat => {
+      const cls = (cat === "c1" || cat === "c2") ? "cat-concept" : "cat-attr";
+      return `<div class="cat-label ${cls}">${CONFIG[cat].name}</div>`;
+    }).join(`<div class="cat-or">或</div>`);
+
+    return `<div class="key-hint">${sideLabel}</div>${itemsHtml}`;
+  }
+
+  function renderWordPreview(blockCfg) {
+    const allCats = [...blockCfg.leftCategories, ...blockCfg.rightCategories];
+    const html = allCats.map(cat => {
+      const cls = (cat === "c1" || cat === "c2") ? "cat-concept" : "cat-attr";
+      return `
+        <div class="word-preview-item">
+          <strong class="${cls}">${CONFIG[cat].name}</strong>
+          <span>${CONFIG[cat].words.join("、")}</span>
+        </div>
+      `;
+    }).join("");
+    document.getElementById("inst-word-preview").innerHTML = html;
+  }
+
+  // =========================================================================
+  // 流程控制：開始測驗 -> 區段說明 -> 執行題目 -> 結束
+  // =========================================================================
+  document.getElementById("btn-start").addEventListener("click", () => {
+    const idInput = document.getElementById("participant-id").value.trim();
+    const errorEl = document.getElementById("start-error");
+    if (!idInput) {
+      errorEl.textContent = "請輸入受測者代碼後再開始。";
+      return;
+    }
+    errorEl.textContent = "";
+
+    const sessionVal = Number(document.querySelector('input[name="session-num"]:checked').value);
+    state.id = idInput;
+    state.session = sessionVal;
+    state.order = Math.random() < 0.5 ? 1 : 2;
+    state.blocks = buildBlocks(state.order);
+    state.currentBlockIndex = 0;
+    state.rawRecords = [];
+
+    prepareBlockInstruction();
+  });
+
+  function prepareBlockInstruction() {
+    const blockCfg = state.blocks[state.currentBlockIndex];
+    document.getElementById("inst-left-header").innerHTML = renderSideHeaderHTML(blockCfg.leftCategories, "左側（E 鍵）");
+    document.getElementById("inst-right-header").innerHTML = renderSideHeaderHTML(blockCfg.rightCategories, "右側（I 鍵）");
+    document.getElementById("inst-block-progress").textContent = `區段 ${blockCfg.block} / 7（共 ${blockCfg.nTrials} 題）`;
+    document.getElementById("inst-title").textContent = `第 ${blockCfg.block} 區段說明`;
+    document.getElementById("inst-desc").textContent = blockCfg.desc;
+    renderWordPreview(blockCfg);
+    showScreen("instruction");
+  }
+
+  function startCurrentBlock() {
+    const blockCfg = state.blocks[state.currentBlockIndex];
+    state.currentTrialsList = generateTrialsForBlock(blockCfg);
+    state.currentTrialIndex = 0;
+
+    document.getElementById("trial-left-header").innerHTML = renderSideHeaderHTML(blockCfg.leftCategories, "左側（E 鍵）");
+    document.getElementById("trial-right-header").innerHTML = renderSideHeaderHTML(blockCfg.rightCategories, "右側（I 鍵）");
+
+    showScreen("trial");
+    presentTrial();
+  }
+
+  document.getElementById("btn-begin-block").addEventListener("click", startCurrentBlock);
+
+  function presentTrial() {
+    const blockCfg = state.blocks[state.currentBlockIndex];
+    const trialItem = state.currentTrialsList[state.currentTrialIndex];
+
+    document.getElementById("trial-progress").textContent =
+      `區段 ${blockCfg.block} / 7 ｜ 第 ${state.currentTrialIndex + 1} / ${blockCfg.nTrials} 題`;
+
+    const stimEl = document.getElementById("stimulus-word");
+    stimEl.textContent = trialItem.stimulus;
+    stimEl.className = "stimulus-word " + ((trialItem.category === "c1" || trialItem.category === "c2") ? "cat-concept" : "cat-attr");
+
+    document.getElementById("feedback-wrong").classList.remove("visible");
+
+    state.firstAttemptCorrect = 1;
+    state.trialStartTime = performance.now();
+    state.isAwaitingResponse = true;
+  }
+
+  function handleResponse(side) {
+    if (!state.isAwaitingResponse) return;
+
+    const blockCfg = state.blocks[state.currentBlockIndex];
+    const trialItem = state.currentTrialsList[state.currentTrialIndex];
+
+    if (side !== trialItem.correctSide) {
+      // 按錯：記錄為首次未答對，顯示錯誤提示，等待受測者改按正確鍵
+      state.firstAttemptCorrect = 0;
+      document.getElementById("feedback-wrong").classList.add("visible");
+      return;
+    }
+
+    // 按對：計算從字詞出現到按對為止的毫秒數
+    state.isAwaitingResponse = false;
+    const rtMs = Math.round(performance.now() - state.trialStartTime);
+
+    state.rawRecords.push({
+      block: blockCfg.block,
+      pairing: blockCfg.pairing,
+      phase: blockCfg.phase,
+      trial: state.currentTrialIndex + 1,
+      category: trialItem.category,
+      stimulus: trialItem.stimulus,
+      correct: state.firstAttemptCorrect,
+      rt_ms: rtMs
+    });
+
+    state.currentTrialIndex++;
+    if (state.currentTrialIndex < state.currentTrialsList.length) {
+      presentTrial();
+    } else {
+      state.currentBlockIndex++;
+      if (state.currentBlockIndex < state.blocks.length) {
+        prepareBlockInstruction();
+      } else {
+        finishExperiment();
+      }
+    }
+  }
+
+  // 鍵盤事件監聽（E 鍵、I 鍵；指導語畫面支援空白鍵開始）
+  document.addEventListener("keydown", (e) => {
+    if (e.repeat) return;
+
+    if (screens.instruction.classList.contains("active")) {
+      if (e.code === "Space" || e.key === " ") {
+        e.preventDefault();
+        startCurrentBlock();
+      }
+      return;
+    }
+
+    if (screens.trial.classList.contains("active") && state.isAwaitingResponse) {
+      const key = e.key.toLowerCase();
+      if (key === "e") {
+        e.preventDefault();
+        handleResponse("left");
+      } else if (key === "i") {
+        e.preventDefault();
+        handleResponse("right");
+      }
+    }
+  });
+
+  // 畫面左右按鈕事件監聽（支援手機觸控與滑鼠）
+  document.getElementById("btn-left").addEventListener("click", () => handleResponse("left"));
+  document.getElementById("btn-right").addEventListener("click", () => handleResponse("right"));
+
+  // =========================================================================
+  // 計分邏輯（D 分數與相關指標）
+  // =========================================================================
+  function round4(num) {
+    if (num === "" || num === null || num === undefined || Number.isNaN(num)) return "";
+    return Math.round(num * 10000) / 10000;
+  }
+
+  function mean(arr) {
+    if (arr.length === 0) return NaN;
+    return arr.reduce((acc, v) => acc + v, 0) / arr.length;
+  }
+
+  // 樣本標準差（分母用 n - 1）
+  function sampleSD(arr) {
+    if (arr.length <= 1) return NaN;
+    const m = mean(arr);
+    const sumSq = arr.reduce((acc, v) => acc + Math.pow(v - m, 2), 0);
+    return Math.sqrt(sumSq / (arr.length - 1));
+  }
+
+  function computeStageD(stageTrials) {
+    const rtsAll = stageTrials.map(t => t.rt_ms);
+    const rtsA = stageTrials.filter(t => t.pairing === "A").map(t => t.rt_ms);
+    const rtsB = stageTrials.filter(t => t.pairing === "B").map(t => t.rt_ms);
+
+    const sdAll = sampleSD(rtsAll);
+    const meanA = mean(rtsA);
+    const meanB = mean(rtsB);
+
+    if (!sdAll || sdAll === 0 || Number.isNaN(meanA) || Number.isNaN(meanB)) {
+      return "";
+    }
+    return (meanB - meanA) / sdAll;
+  }
+
+  function calculateScores(trials) {
+    // (1) 只使用 phase 是 practice 與 test 的資料
+    // (2) 刪除 rt_ms 超過 10000 的嘗試
+    const validTrials = trials.filter(
+      t => (t.phase === "practice" || t.phase === "test") && t.rt_ms <= 10000
+    );
+
+    const n_trials = validTrials.length;
+
+    if (n_trials === 0) {
+      return {
+        n_trials: 0,
+        error_rate: "",
+        fast_rate: "",
+        D_practice: "",
+        D_test: "",
+        D: ""
+      };
+    }
+
+    const errorCount = validTrials.filter(t => t.correct === 0).length;
+    const fastCount = validTrials.filter(t => t.rt_ms < 300).length;
+
+    const errorRateRaw = errorCount / n_trials;
+    const fastRateRaw = fastCount / n_trials;
+
+    // (3) 練習段與正式段分別計算
+    const practiceTrials = validTrials.filter(t => t.phase === "practice");
+    const testTrials = validTrials.filter(t => t.phase === "test");
+
+    const dPracticeRaw = computeStageD(practiceTrials);
+    const dTestRaw = computeStageD(testTrials);
+
+    // (4) D 是練習段與正式段兩個結果的平均
+    let dTotalRaw = "";
+    if (dPracticeRaw !== "" && dTestRaw !== "") {
+      dTotalRaw = (dPracticeRaw + dTestRaw) / 2;
+    }
+
+    // (5) rt_ms 小於 300 的比例超過 10% 時，D 設為空白
+    if (fastRateRaw > 0.1) {
+      dTotalRaw = "";
+    }
+
+    return {
+      n_trials: n_trials,
+      error_rate: round4(errorRateRaw),
+      fast_rate: round4(fastRateRaw),
+      D_practice: round4(dPracticeRaw),
+      D_test: round4(dTestRaw),
+      D: round4(dTotalRaw)
+    };
+  }
+
+  // =========================================================================
+  // 結束處理、資料傳送與 CSV 備援下載
+  // =========================================================================
+  async function finishExperiment() {
+    showScreen("end");
+
+    const score = calculateScores(state.rawRecords);
+    const payload = {
+      id: state.id,
+      session: state.session,
+      order: state.order,
+      trials: state.rawRecords,
+      score: score
+    };
+    state.finalPayload = payload;
+
+    // 雙重保險：立即備份至瀏覽器 localStorage，避免意外關閉遺失原始資料
+    try {
+      const backupKey = `iat_backup_${state.id}_s${state.session}_${Date.now()}`;
+      localStorage.setItem(backupKey, JSON.stringify(payload));
+    } catch (_) {}
+
+    const statusEl = document.getElementById("upload-status");
+    const downloadBtn = document.getElementById("btn-download-csv");
+
+    const endpoint = (CONFIG.endpoint || "").trim();
+    if (!endpoint) {
+      statusEl.textContent = "請點擊下方按鈕下載原始資料檔案，並交給研究人員。";
+      downloadBtn.style.display = "block";
+      return;
+    }
+
+    statusEl.textContent = "正在傳送作答資料，請稍候...";
+
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "text/plain"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const responseText = await response.text();
+      if (response.ok && responseText.trim().toLowerCase() === "ok") {
+        statusEl.textContent = "資料已成功傳送，您可以安全關閉此視窗。";
+      } else {
+        throw new Error("伺服器未回傳 ok");
+      }
+    } catch (err) {
+      statusEl.textContent = "資料自動傳送未完成，請點擊下方按鈕下載 CSV 原始資料並交給研究人員。";
+      downloadBtn.style.display = "block";
+    }
+  }
+
+  // 產生並下載 CSV（包含受測者基本欄位與完整的 8 個原始資料欄位）
+  function escapeCSV(val) {
+    if (val === null || val === undefined) return "";
+    const str = String(val);
+    if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+      return `"${str.replace(/"/g, '""')}"`;
+    }
+    return str;
+  }
+
+  document.getElementById("btn-download-csv").addEventListener("click", () => {
+    if (!state.finalPayload) return;
+    const p = state.finalPayload;
+
+    const headers = [
+      "id",
+      "session",
+      "order",
+      "block",
+      "pairing",
+      "phase",
+      "trial",
+      "category",
+      "stimulus",
+      "correct",
+      "rt_ms"
+    ];
+
+    const rows = p.trials.map(t => [
+      escapeCSV(p.id),
+      escapeCSV(p.session),
+      escapeCSV(p.order),
+      escapeCSV(t.block),
+      escapeCSV(t.pairing),
+      escapeCSV(t.phase),
+      escapeCSV(t.trial),
+      escapeCSV(t.category),
+      escapeCSV(t.stimulus),
+      escapeCSV(t.correct),
+      escapeCSV(t.rt_ms)
+    ].join(","));
+
+    // 加上 UTF-8 BOM (\uFEFF) 確保中文在 Excel 開啟正常顯示
+    const csvContent = "\uFEFF" + [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `IAT_${p.id}_session${p.session}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  });
+</script>
+
+</body>
+</html>
